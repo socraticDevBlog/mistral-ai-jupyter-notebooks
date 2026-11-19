@@ -91,3 +91,7 @@ uv run python -m ipykernel install --user --name mistral-jupyter --display-name 
 - `MAX_TOKENS = 4096` caps every `complete()`/`stream()` call: asking for more raises a `ValueError` until you deliberately raise the cap in `mistral_jupyter/mistral_client.py` — a guard against runaway notebook spend
 - API keys: <https://console.mistral.ai/api-keys/>
 - SDK reference: <https://docs.mistral.ai/client/python/>
+
+## License 
+
+[![CC BY 4.0][cc-by-shield]][cc-by]
