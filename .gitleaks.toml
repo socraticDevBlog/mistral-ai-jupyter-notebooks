@@ -1,0 +1,16 @@
+title = "gitleaks config for mistral-jupyter"
+
+# files that are safe to commit
+[allowlist]
+description = "files that never contain real secrets"
+paths = [
+  '''\.env\.example$''',
+  '''uv\.lock$''',
+]
+
+# Mistral API keys are 32-char alphanumeric strings assigned to MISTRAL_API_KEY
+[[rules]]
+id = "mistral-api-key"
+description = "Mistral AI API key"
+regex = '''(?i)mistral[_-]?api[_-]?key["']?\s*[:=]\s*["']?[A-Za-z0-9]{32}["']?'''
+tags = ["api-key", "mistral"]

@@ -1,0 +1,22 @@
+# secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+
+# python / uv
+__pycache__/
+*.py[cod]
+.venv/
+.uv-cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# local datasets and generated artifacts
+data/*
+!data/.gitkeep
