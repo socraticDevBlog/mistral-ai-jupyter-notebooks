@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  GET-only REST API exposing the notebooks of this repo as LLM endpoints.
+  The Mistral API key lives only in the Lambda environment (set it via the
+  AWS console, Secrets Manager, or a dynamic reference below) — it is never
+  sent to the browser.
+
+Parameters:
+  MistralApiKey:
+    Type: String
+    NoEcho: true
+    Description: Your Mistral AI API key. It is injected as a Lambda environment
+      variable at deploy time — it is never baked into function.zip or the
+      bootstrap binary. Prefer storing it in Secrets Manager and using a
+      {{resolve:secretsmanager:...}} dynamic reference instead of passing it here.
+
+Resources:
+  NotebooksApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: provided.al2023
+      Handler: bootstrap          # binary produced by `make zip`
+      CodeUri: function.zip
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 30                 # one dialogue round = 2 LLM calls
+      Environment:
+        Variables:
+          MISTRAL_API_KEY: !Ref MistralApiKey
+          # DIALOGUE_MAX_TURNS: "3"   # optional, default 3 (as N_TURNS in the notebook)
+      Events:
+        DialogueGet:                # notebooks/01_dialogue.ipynb
+          Type: Api
+          Properties:
+            Path: /dialogue
+            Method: GET
+        HelloGet:                   # notebooks/00_hello_mistral.ipynb
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
+
+Outputs:
+  # Api events without an explicit RestApi create an implicit ServerlessRestApi.
+  DialogueUrl:
+    Description: GET endpoint for the three-agent dialogue (you play Sam)
+    Value: !Sub "${ServerlessRestApi.Endpoint}/dialogue"
+  HelloUrl:
+    Description: GET endpoint for the one-shot completion smoke test
+    Value: !Sub "${ServerlessRestApi.Endpoint}/hello"

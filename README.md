@@ -92,7 +92,7 @@ uv run python -m ipykernel install --user --name mistral-jupyter --display-name 
 - API keys: <https://console.mistral.ai/api-keys/>
 - SDK reference: <https://docs.mistral.ai/client/python/>
 
-## License 
+## License
 
 
 This work is licensed under a

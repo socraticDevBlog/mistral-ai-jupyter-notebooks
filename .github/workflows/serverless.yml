@@ -1,0 +1,74 @@
+# Blocking quality gate for the Go serverless template.
+#
+# Runs on every PR that touches serverless/ (and on pushes to main that do).
+# To make this check *block* merges, mark the "serverless (go) / test" status
+# check as required in GitHub branch protection:
+#   Settings → Branches → Branch protection rules → Require status checks →
+#   add "serverless (go) / test".
+name: serverless (go)
+
+on:
+  pull_request:
+    paths:
+      - 'serverless/**'
+      - '.github/workflows/serverless.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'serverless/**'
+      - '.github/workflows/serverless.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: serverless
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.4' # keep in sync with the `go` directive in serverless/go.mod
+          cache-dependency-path: serverless/go.sum
+
+      # dependency hygiene: go.mod / go.sum must be tidy and committed
+      - name: go mod tidy check
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+      # code quality gates
+      - name: build
+        run: go build ./...
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt: these files are not formatted:" >&2
+            echo "$unformatted" >&2
+            exit 1
+          fi
+
+      # unit tests (no AWS or Mistral credentials needed — all fakes/mocks)
+      - name: unit tests
+        run: go test -race -count=1 -coverprofile=coverage.out ./...
+
+      - name: upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: serverless-coverage
+          path: serverless/coverage.out
+          retention-days: 7
