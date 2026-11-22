@@ -32,6 +32,10 @@ uv run jupyter lab
 
 then open `notebooks/00_hello_mistral.ipynb` and run all cells as a smoke test.
 
+## direnv (.envrc)
+
+this repo ships a `.envrc` that uses direnv's `dotenv` command to load `.env` (your `MISTRAL_API_KEY`) into the environment automatically when you `cd` into the project, and to unload it when you leave. after installing [direnv](https://direnv.net/) and adding `eval "$(direnv hook bash)"` (or `zsh`/`fish`/...) to your shell rc, run `direnv allow` once in the repo root — direnv refuses to execute an `.envrc` until you explicitly allow it, and you must re-run `direnv allow` whenever the file changes. only `.envrc` is committed (it holds no secrets, just the `dotenv` line plus a `# shellcheck shell=bash` directive, since direnv evaluates it with bash); the real key stays in the gitignored `.env`. use `direnv deny` to revoke access, or delete `.envrc` to opt out entirely. because direnv exports the variables into your shell, `uv run` and `get_client()` pick them up with no extra code.
+
 ## commands
 
 ```bash
@@ -84,6 +88,17 @@ uv run python -m ipykernel install --user --name mistral-jupyter --display-name 
 - if a key ever leaks (committed notebook output, screenshot, logs): rotate it immediately at <https://console.mistral.ai/api-keys/>.
 - `uv run jupyter lab` binds to localhost with token auth by default — keep it that way. Never start the server with `--ip 0.0.0.0` and an empty token on a shared machine.
 - don't `print(client)` or log raw responses when experimenting with sensitive prompts; the SDK's repr is safe, but response payloads are not.
+
+## api key management
+
+official website: <https://mistral.ai> — API docs at <https://docs.mistral.ai>, and keys are created/managed in the console (La Plateforme / Studio) at <https://console.mistral.ai/api-keys/>.
+
+- create keys only in the console, never by hand. the full key is shown **once** at creation — copy it straight into `.env` (or a password manager); you cannot retrieve it later.
+- keys are scoped to a workspace: use one workspace + key per environment (dev/staging/prod) so quota, rate limits, and revocation stay isolated.
+- set an expiration date on throwaway/trial keys. keys do **not** expire on their own — the free tier is rate-limited but indefinite — and the expiration date cannot be changed after creation, so to extend a key, create a new one and delete the old. a non-expiring key is fine unless your org/workspace admin enforces an API key expiration policy (off by default; see <https://docs.mistral.ai/admin/identity-access/api-keys>).
+- the default connector access scope (`shared connectors only`) is right for automation; only widen it if the app needs your private connectors.
+- rotate on any suspected leak and delete unused keys from the console key list, which shows last-used and expiration per key. if a key ever leaks into git/notebooks, revoke it immediately at <https://console.mistral.ai/api-keys/> and issue a replacement.
+- keep keys out of code and notebooks entirely: `.env` only (gitignored), gitleaks blocks secret commits, and a real environment variable always wins over the file.
 
 ## notes
 
