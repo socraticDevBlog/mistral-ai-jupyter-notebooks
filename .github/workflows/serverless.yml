@@ -8,6 +8,10 @@
 name: serverless (go)
 
 on:
+  # Manual trigger (Actions tab → "Run workflow") so the status check can be
+  # reported on main on demand — branch protection only offers checks that have
+  # run at least once. workflow_dispatch is intentionally NOT path-filtered.
+  workflow_dispatch:
   pull_request:
     paths:
       - 'serverless/**'
