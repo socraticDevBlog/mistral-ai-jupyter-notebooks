@@ -107,7 +107,7 @@ official website: <https://mistral.ai> — API docs at <https://docs.mistral.ai>
 - API keys: <https://console.mistral.ai/api-keys/>
 - SDK reference: <https://docs.mistral.ai/client/python/>
 
-## License 
+## License
 
 
 This work is licensed under a
