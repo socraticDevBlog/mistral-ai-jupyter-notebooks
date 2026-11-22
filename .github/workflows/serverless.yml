@@ -1,6 +1,9 @@
 # Blocking quality gate for the Go serverless template.
 #
-# Runs on every PR that touches serverless/ (and on pushes to main that do).
+# Runs on every PR that touches serverless/ — the PR run is the gate, so pushes
+# to main after merge deliberately do NOT re-run it. Manual runs on main are
+# still possible via workflow_dispatch (see below).
+#
 # To make this check *block* merges, mark the "serverless (go) / test" status
 # check as required in GitHub branch protection:
 #   Settings → Branches → Branch protection rules → Require status checks →
@@ -13,11 +16,6 @@ on:
   # run at least once. workflow_dispatch is intentionally NOT path-filtered.
   workflow_dispatch:
   pull_request:
-    paths:
-      - 'serverless/**'
-      - '.github/workflows/serverless.yml'
-  push:
-    branches: [main]
     paths:
       - 'serverless/**'
       - '.github/workflows/serverless.yml'
