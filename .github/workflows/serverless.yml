@@ -62,6 +62,13 @@ jobs:
             exit 1
           fi
 
+      # SAM/CloudFormation template is excluded from pre-commit's check-yaml
+      # (!Ref/!Sub tags), so validate it properly here instead.
+      - name: cfn-lint (SAM template)
+        run: |
+          pip install cfn-lint
+          cfn-lint template.yaml
+
       # unit tests (no AWS or Mistral credentials needed — all fakes/mocks)
       - name: unit tests
         run: go test -race -count=1 -coverprofile=coverage.out ./...

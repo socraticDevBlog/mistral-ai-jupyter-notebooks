@@ -57,9 +57,10 @@ curl -G '...' --data-urlencode 'message=And what about meaning?' \
 Safety rails (a web user can send anything, so inputs are capped):
 
 - Sam's line: max 2000 chars, then truncated to **5 sentences** (as in the notebook)
-- transcript: max `DIALOGUE_MAX_TURNS × 3` entries; speakers must strictly
-  alternate Sam → Vera → Anton, and turn numbers/personas are **recomputed
-  server-side** — a caller cannot forge Vera's or Anton's lines
+- transcript: max `DIALOGUE_MAX_TURNS × 3` entries, must contain only complete
+  rounds (a multiple of 3 entries); speakers must strictly alternate
+  Sam → Vera → Anton, and turn numbers/personas are **recomputed server-side** —
+  a caller cannot forge Vera's or Anton's lines
 - rounds capped at `DIALOGUE_MAX_TURNS` (default 3 = `N_TURNS` in the notebook,
   hard ceiling 10)
 - each model reply: `max_tokens=512`, capped at 5 sentences in code
@@ -75,16 +76,21 @@ Safety rails (a web user can send anything, so inputs are capped):
 
 ## test
 
+requires Go as pinned in `go.mod` (currently 1.27.4, same as CI). An older local
+Go works too: with the default `GOTOOLCHAIN=auto` it downloads the pinned
+toolchain once (needs network; set `GOTOOLCHAIN=local` to forbid that).
+
 ```bash
 go test ./...        # unit tests, all with fake LLMs / httptest servers
 go vet ./...
 ```
 
-Run the real API locally (needs your key in the environment, never in git):
+Run the real API locally (needs your key in the environment, never in git — in
+this repo [direnv](https://direnv.net/) loads `MISTRAL_API_KEY` from the root
+`.env` automatically, no manual export needed):
 
 ```bash
-export MISTRAL_API_KEY=...
-go run ./cmd/local
+go run ./cmd/local   # binds 127.0.0.1:8080 only — loopback, not exposed
 curl 'http://localhost:8080/hello?prompt=What%20is%20a%20PoC%3F'
 ```
 

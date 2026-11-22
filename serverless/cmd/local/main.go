@@ -26,7 +26,9 @@ func main() {
 	router.Add("/dialogue", dialogue.Handler(llm))
 	router.Add("/hello", hello.Handler(llm))
 
-	log.Println("listening on http://localhost:8080")
+	// Bind loopback only: anyone who can reach the port can burn the API key's
+	// credits, so this dev server must not be exposed on a shared network.
+	log.Println("listening on http://127.0.0.1:8080")
 	log.Println("try: curl 'http://localhost:8080/hello?prompt=What%20is%20a%20PoC?'")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", router))
 }

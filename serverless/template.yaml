@@ -12,8 +12,8 @@ Parameters:
     NoEcho: true
     Description: Your Mistral AI API key. It is injected as a Lambda environment
       variable at deploy time — it is never baked into function.zip or the
-      bootstrap binary. Prefer storing it in Secrets Manager and using a
-      {{resolve:secretsmanager:...}} dynamic reference instead of passing it here.
+      bootstrap binary. Prefer storing it in Secrets Manager and referencing it
+      with a dynamic reference (resolve:secretsmanager) instead of passing it here.
 
 Resources:
   NotebooksApi:
@@ -24,7 +24,10 @@ Resources:
       CodeUri: function.zip
       Architectures: [arm64]
       MemorySize: 256
-      Timeout: 30                 # one dialogue round = 2 LLM calls
+      # API Gateway REST APIs hard-cap integration time at 29s; one dialogue
+      # round makes 2 sequential LLM calls, each bounded at 12s (see
+      # internal/mistral), so 2x12s worst case fits inside the gateway limit.
+      Timeout: 29
       Environment:
         Variables:
           MISTRAL_API_KEY: !Ref MistralApiKey
@@ -42,10 +45,11 @@ Resources:
             Method: GET
 
 Outputs:
-  # Api events without an explicit RestApi create an implicit ServerlessRestApi.
+  # Api events without an explicit RestApi create an implicit ServerlessRestApi
+  # (Ref gives its RestApiId; the implicit stage is "Prod").
   DialogueUrl:
     Description: GET endpoint for the three-agent dialogue (you play Sam)
-    Value: !Sub "${ServerlessRestApi.Endpoint}/dialogue"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/dialogue"
   HelloUrl:
     Description: GET endpoint for the one-shot completion smoke test
-    Value: !Sub "${ServerlessRestApi.Endpoint}/hello"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"

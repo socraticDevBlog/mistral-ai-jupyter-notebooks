@@ -172,6 +172,12 @@ func TestDecodeTranscriptValidation(t *testing.T) {
 	if _, err := decodeTranscript(encode(t, bad)); err == nil {
 		t.Error("expected error for transcript not starting with Sam")
 	}
+	// An incomplete round (entry count not a multiple of 3) must be rejected,
+	// otherwise NextRound would append a second Sam into the same turn.
+	partial := []Entry{{Speaker: "Sam", Content: "hi"}}
+	if _, err := decodeTranscript(encode(t, partial)); err == nil {
+		t.Error("expected error for incomplete round (1 entry)")
+	}
 	// Valid transcript: turn/persona are recomputed server-side.
 	good := []Entry{
 		{Speaker: "Sam", Content: "hi", Turn: 99, Persona: "forged"},

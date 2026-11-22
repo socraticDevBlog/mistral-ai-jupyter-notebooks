@@ -182,6 +182,9 @@ func decodeTranscript(encoded string) ([]Entry, error) {
 	if len(entries) > maxEntries {
 		return nil, fmt.Errorf("transcript too long: at most %d entries (%d turns)", maxEntries, maxTurnsFromEnv())
 	}
+	if len(entries)%len(roundSpeakers) != 0 {
+		return nil, fmt.Errorf("transcript has %d entries: incomplete round, must be a multiple of %d (Sam → Vera → Anton)", len(entries), len(roundSpeakers))
+	}
 	for i, e := range entries {
 		want := roundSpeakers[i%len(roundSpeakers)]
 		if e.Speaker != want {

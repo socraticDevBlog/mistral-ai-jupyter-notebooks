@@ -21,6 +21,10 @@ const (
 	DefaultBaseURL = "https://api.mistral.ai/v1"
 	// DefaultModel mirrors DEFAULT_MODEL in mistral_jupyter/mistral_client.py.
 	DefaultModel = "mistral-small-latest"
+	// httpTimeout bounds ONE upstream call. A dialogue round makes two
+	// sequential calls, and API Gateway REST APIs hard-cap at 29s total
+	// integration time, so 2x12s worst case fits inside the gateway limit.
+	httpTimeout = 12 * time.Second
 )
 
 // Message is one chat message (role: system | user | assistant).
@@ -66,7 +70,7 @@ func NewFromEnv() (*Client, error) {
 		APIKey:  key,
 		Model:   model,
 		BaseURL: base,
-		HTTP:    &http.Client{Timeout: 30 * time.Second},
+		HTTP:    &http.Client{Timeout: httpTimeout},
 	}, nil
 }
 

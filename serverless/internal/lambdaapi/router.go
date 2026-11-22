@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -69,6 +70,9 @@ func (r *Router) serve(ctx context.Context, method, path string, q url.Values) (
 		if errors.As(err, &ce) {
 			return http.StatusBadRequest, mustJSON(map[string]string{"error": ce.Msg})
 		}
+		// Log the real error server-side (CloudWatch in Lambda, stderr locally);
+		// the client only gets a generic message.
+		log.Printf("handler %s %s: %v", method, path, err)
 		return http.StatusInternalServerError, mustJSON(map[string]string{"error": "internal error"})
 	}
 	return http.StatusOK, mustJSON(out)
